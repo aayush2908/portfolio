@@ -94,7 +94,7 @@ git push -u origin main
 **Recommended domains:**
 - `aayushagarwal.com` - $12/year
 - `aayush.dev` - $15/year
-- `aayushagarwal.tech` - $5/year
+- `aayushagarwal.tech` - $5/year.
 
 ---
 
