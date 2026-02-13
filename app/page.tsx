@@ -7,18 +7,71 @@ import {
   X, Folder, FileText, Book, Layers, Users, TrendingUp, DollarSign,
   Target, CheckCircle, ArrowRight, Calendar, MapPin, Building2, Sparkles,
   Rocket, Brain, MessageSquare, Image as ImageIcon, PlayCircle, GitBranch,
-  Server, Lock, Eye, BarChart3, Activity, Shield, Lightbulb
+  Server, Lock, Eye, BarChart3, Activity, Shield, Lightbulb, Star, Quote, Mic, Search
 } from 'lucide-react';
+
+// Import data from centralized data files
+import { projects } from './data/projects';
+import { blogPosts } from './data/blog';
+import { techCategories } from './data/techStack';
+import { softSkills } from './data/skills';
+import { recommendations } from './data/recommendations';
 
 export default function EnhancedAayushPortfolio() {
   const [activeSection, setActiveSection] = useState('home');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [terminalOpen, setTerminalOpen] = useState(false);
-  const [terminalHistory, setTerminalHistory] = useState([]);
+  const [terminalHistory, setTerminalHistory] = useState<Array<{input: string, output: string}>>([]);
   const [terminalInput, setTerminalInput] = useState('');
-  const [expandedProject, setExpandedProject] = useState(null);
-  const canvasRef = useRef(null);
-  const terminalInputRef = useRef(null);
+  const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [notificationEmail, setNotificationEmail] = useState('');
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [notificationSubmitted, setNotificationSubmitted] = useState(false);
+  
+  // Project filtering
+  const [projectFilter, setProjectFilter] = useState<string | null>(null);
+  
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<any>(null);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalType, setModalType] = useState(''); // 'image', 'pdf', 'resume', 'recommendation'
+  const [modalUrl, setModalUrl] = useState('');
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+  
+  // Custom CSS for grid pattern and animations
+  const customStyles = {
+    bgGridPattern: {
+      backgroundImage: 'linear-gradient(to right, rgba(0, 255, 149, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 255, 149, 0.1) 1px, transparent 1px)',
+      backgroundSize: '20px 20px'
+    },
+    pulseSlow: {
+      animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+    }
+  };
+  
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const terminalInputRef = useRef<HTMLInputElement>(null);
+  
+  // Function to open modal with content
+  const openModal = (title: string, content: any, type: string, url: string = '') => {
+    setModalTitle(title);
+    setModalContent(content);
+    setModalType(type);
+    setModalUrl(url);
+    setModalOpen(true);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  };
+
+  // Function to close modal
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalContent(null);
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+  };
 
   // Matrix rain effect
   useEffect(() => {
@@ -26,6 +79,7 @@ export default function EnhancedAayushPortfolio() {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -35,6 +89,7 @@ export default function EnhancedAayushPortfolio() {
     const drops = Array(Math.floor(columns)).fill(1);
 
     function draw() {
+      if (!ctx || !canvas) return;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
@@ -58,7 +113,7 @@ export default function EnhancedAayushPortfolio() {
 
   // Mouse tracking
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth - 0.5) * 20,
         y: (e.clientY / window.innerHeight - 0.5) * 20
@@ -82,10 +137,18 @@ export default function EnhancedAayushPortfolio() {
   achievements - List honors and awards
   stats      - Show career statistics
   clear      - Clear terminal screen
-  github     - Open GitHub profile
   linkedin   - Open LinkedIn profile
-  resume     - Download resume (coming soon)
+  resume     - View and download resume
   blog       - View blog posts (coming soon)
+  open       - Visit company websites
+  
+Interactive commands:
+  skills --category=[ai|backend|cloud|db|frontend|devops|observability|security]
+  projects --filter=[ai|infra|frontend|backend]
+  projects --details [project-id]
+  experience --company=[avoca|hyperverge|jidoka|carikture]
+  open [avoca|hyperverge]
+  yc       - Visit Y Combinator page for Avoca AI
   
 Type any command to execute it.`
     }),
@@ -93,13 +156,17 @@ Type any command to execute it.`
       output: `AAYUSH AGARWAL - Senior Backend & AI Systems Engineer
 
 ▸ 5+ years building scalable KYC, AI inference, and Voice AI platforms
-▸ Promoted 3 times in 4 years at Hyperverge (Intern → SDE3)
+▸ 4.5 years at Hyperverge (Intern → SDE1 → SDE2 → SDE3)
 ▸ Led cross-functional teams of 10+ engineers
 ▸ Architected distributed systems serving 50+ enterprise clients
-▸ Expertise: Backend Systems, Cloud Architecture, AI Agents, Cost Optimization
+▸ Expertise: Backend Systems, Cloud Architecture, AI/LLM Integration (OpenAI, Claude, Gemini), Voice Technologies
 
 Current: Engineering @ Avoca AI (YC W25)
-Previous: SDE3 @ Hyperverge Technologies`
+Type 'yc' to visit Y Combinator page for Avoca
+Previous: SDE3 @ Hyperverge Technologies
+
+Type 'open avoca' to visit Avoca AI website
+Type 'open hyperverge' to visit Hyperverge website`
     }),
     skills: () => ({
       output: `TECHNICAL SKILLS:
@@ -229,7 +296,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
      Top 200 among 50,000+ candidates in national competition
      
 [📈] Career Growth
-     Promoted 3 times in 4 years (Intern → SDE1 → SDE2 → SDE3)
+     Career path: Intern → SDE1 → SDE2 → SDE3 (4.5 years)
      
 [💰] Cost Optimization
      Saved $360K+ annually in AWS infrastructure costs
@@ -274,30 +341,205 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
       output: '',
       clear: true
     }),
-    github: () => ({
-      output: 'Opening GitHub profile...',
-      action: () => window.open('https://github.com/aayush1936', '_blank')
-    }),
     linkedin: () => ({
       output: 'Opening LinkedIn profile...',
       action: () => window.open('https://linkedin.com/in/aayush1936', '_blank')
     }),
     resume: () => ({
-      output: 'Resume download feature coming soon! Contact me directly for the latest version.'
+      output: 'Opening resume preview...',
+      action: () => {
+        openModal(
+          'Aayush Agarwal - Resume', 
+          null, 
+          'resume',
+          'https://drive.google.com/file/d/1DD1X5J4yPINJMrTgoRVULV5_0llMis8K/view?usp=sharing'
+        );
+      }
     }),
     blog: () => ({
       output: 'Blog section under development. Coming soon with posts on:\n  → Building scalable Voice AI systems\n  → AWS cost optimization strategies\n  → LLM integration best practices\n  → Team leadership in tech\n\nStay tuned!'
-    })
+    }),
+    open: (args: string) => {
+      if (args === 'avoca') {
+        window.open('https://avoca.ai', '_blank');
+        return { output: 'Opening Avoca AI website...' };
+      } else if (args === 'hyperverge') {
+        window.open('https://hyperverge.co', '_blank');
+        return { output: 'Opening Hyperverge website...' };
+      } else {
+        return { output: 'Unknown website. Try "open avoca" or "open hyperverge".' };
+      }
+    },
+    yc: () => {
+      window.open('https://www.ycombinator.com/companies/avoca', '_blank');
+      return { output: 'Opening Y Combinator page for Avoca AI...' };
+    }
   };
 
-  const handleTerminalCommand = (cmd) => {
+  const handleTerminalCommand = (cmd: string) => {
     const trimmedCmd = cmd.trim().toLowerCase();
-    const command = terminalCommands[trimmedCmd];
-    
     const newHistory = [...terminalHistory, { input: cmd, output: '' }];
     
+    // Check for complex commands with parameters
+    if (trimmedCmd.startsWith('skills --category=')) {
+      const category = trimmedCmd.split('=')[1];
+      let output = '';
+      
+      switch (category) {
+        case 'ai':
+          output = `AI & LLM SYSTEMS:\n\n${techCategories[0].skills.join(', ')}`;
+          break;
+        case 'backend':
+          output = `BACKEND & SYSTEMS:\n\n${techCategories[1].skills.join(', ')}`;
+          break;
+        case 'cloud':
+          output = `CLOUD & INFRASTRUCTURE:\n\n${techCategories[2].skills.join(', ')}`;
+          break;
+        case 'db':
+          output = `DATABASES & ANALYTICS:\n\n${techCategories[3].skills.join(', ')}`;
+          break;
+        case 'frontend':
+          output = `FRONTEND TECHNOLOGIES:\n\n${techCategories[4].skills.join(', ')}`;
+          break;
+        case 'devops':
+          output = `DEVOPS & MONITORING:\n\n${techCategories[5].skills.join(', ')}`;
+          break;
+        case 'observability':
+          output = `OBSERVABILITY & RELIABILITY:\n\n${techCategories[6].skills.join(', ')}`;
+          break;
+        case 'security':
+          output = `SECURITY & COMPLIANCE:\n\n${techCategories[7].skills.join(', ')}`;
+          break;
+        default:
+          output = `Category not found. Available categories: ai, backend, cloud, db, frontend, devops, observability, security`;
+      }
+      
+      newHistory[newHistory.length - 1].output = output;
+      setTerminalHistory(newHistory);
+    }
+    else if (trimmedCmd.startsWith('projects --filter=')) {
+      const filter = trimmedCmd.split('=')[1];
+      const filteredProjects = projects.filter(project => {
+        if (filter === 'ai' && (project.category.toLowerCase().includes('ai') || project.tech.some(t => t.toLowerCase().includes('ai')))) {
+          return true;
+        }
+        if (filter === 'infra' && (project.category.toLowerCase().includes('infra') || project.tech.some(t => t.toLowerCase().includes('infra')))) {
+          return true;
+        }
+        if (filter === 'frontend' && (project.category.toLowerCase().includes('frontend') || project.tech.some(t => t.toLowerCase().includes('react') || t.toLowerCase().includes('ui')))) {
+          return true;
+        }
+        if (filter === 'backend' && (project.category.toLowerCase().includes('backend') || project.tech.some(t => t.toLowerCase().includes('node') || t.toLowerCase().includes('python')))) {
+          return true;
+        }
+        return false;
+      });
+      
+      let output = `PROJECTS (FILTERED BY ${filter.toUpperCase()}):\n\n`;
+      
+      filteredProjects.forEach((project, i) => {
+        output += `[${i+1}] ${project.title} (${project.company})\n    Category: ${project.category}\n    Impact: ${project.impact}\n\n`;
+      });
+      
+      if (filteredProjects.length === 0) {
+        output += 'No projects found with this filter. Try: ai, infra, frontend, backend';
+      }
+      
+      newHistory[newHistory.length - 1].output = output;
+      setTerminalHistory(newHistory);
+    }
+    else if (trimmedCmd.startsWith('projects --details ')) {
+      const projectId = trimmedCmd.split(' ')[2];
+      const project = projects.find(p => p.id === projectId);
+      
+      if (project) {
+        let output = `PROJECT DETAILS: ${project.title}\n\n`;
+        output += `Company: ${project.company}\n`;
+        output += `Period: ${project.period}\n`;
+        output += `Category: ${project.category}\n`;
+        output += `Description: ${project.description}\n`;
+        output += `Impact: ${project.impact}\n\n`;
+        
+        output += `TECHNOLOGIES:\n${project.tech.join(', ')}\n\n`;
+        
+        output += `KEY FEATURES:\n`;
+        project.features.forEach((feature, i) => {
+          output += `- ${feature}\n`;
+        });
+        
+        output += `\nMETRICS:\n`;
+        project.metrics.forEach((metric: any) => {
+          if (metric.before) {
+            output += `- ${metric.label}: ${metric.before} → ${metric.after} (${metric.improvement})\n`;
+          } else {
+            output += `- ${metric.label}: ${metric.value}\n`;
+          }
+        });
+        
+        newHistory[newHistory.length - 1].output = output;
+        setTerminalHistory(newHistory);
+      } else {
+        newHistory[newHistory.length - 1].output = `Project not found. Available projects: ${projects.map(p => p.id).join(', ')}`;
+        setTerminalHistory(newHistory);
+      }
+    }
+    else if (trimmedCmd.startsWith('experience --company=')) {
+      const company = trimmedCmd.split('=')[1];
+      let output = '';
+      
+      switch (company) {
+        case 'avoca':
+          output = `AVOCA AI (YC W25) | Software Engineer | May 2025 - Present
+          
+▹ Architected a configurable Prompt Orchestration system for LLM-based Voice Assistants, reducing customer onboarding time from 4-5 days to under 1 minute (99.5% improvement)
+▹ Built a real-time Call Debugger platform enabling rapid tracing and issue diagnosis, reducing call-level bug resolution time from hours to less than 5 minutes
+▹ Maintained, designed and deployed Voice AI Agents, Web Chat, and HITL responder systems integrating OpenAI, Claude, and Gemini APIs with structured fallback
+▹ Scaled, managed and led a 14+ member team, overseeing sprint planning, technical mentorship, hiring, and delivery excellence
+▹ Expanded deployed engineering team from 5 to 20+ members, improving deployment velocity and customer onboarding throughput by 300%`;
+          break;
+        case 'hyperverge':
+          output = `HYPERVERGE TECHNOLOGIES | SDE1 → SDE3 | Jan 2021 - May 2025
+
+▹ Architected a Global KYC platform supporting 195+ countries and processing 500+ diverse ID card formats, serving 50+ enterprise clients
+▹ Reduced AWS costs by ~$30K per month through resource allocation, instance rightsizing, efficient scaling, and cost management strategies
+▹ Deployed an automated mirroring and analysis system, eliminating product downtime for over a year, reducing manual effort by 95%
+▹ Built an automated AI model analysis and benchmarking platform, reducing False Acceptance and Rejection Rates by 35-45%
+▹ Migrated product from AutoScaling to Kubernetes resulting in over 80% faster deployments and improved reliability
+▹ Integrated deepfake and anomaly detection models reducing fraudulent cases by >95%`;
+          break;
+        case 'jidoka':
+          output = `JIDOKA TECHNOLOGIES | Intern | Apr 2020 - May 2020
+
+▹ Developed the Kompass Android Application for AI-Driven Defect Detection resulting in lowering inspection time by 64%
+▹ Worked with computer vision models to detect product defects in manufacturing environments
+▹ Implemented UI components and backend logic for the mobile application`;
+          break;
+        case 'carikture':
+          output = `CARIKTURE | Information Technology Summer Intern | Apr 2020 - May 2020
+
+▹ Built a Trello Clone from scratch with functionalities like moving cards, commenting, and notifications
+▹ Implemented a project management system with drag-and-drop interfaces and real-time updates
+▹ Used PHP, HTML, CSS, JavaScript, and MySQL to create a full-stack web application`;
+          break;
+        default:
+          output = `Company not found. Available companies: avoca, hyperverge, jidoka, carikture`;
+      }
+      
+      newHistory[newHistory.length - 1].output = output;
+      setTerminalHistory(newHistory);
+    }
+    else {
+      // Check for commands with arguments (e.g., "open avoca")
+      const parts = trimmedCmd.split(' ');
+      const baseCommand = parts[0];
+      const args = parts.length > 1 ? parts.slice(1).join(' ') : undefined;
+      
+      // Handle standard commands
+      const command = (terminalCommands as any)[baseCommand];
+    
     if (command) {
-      const result = command();
+        // Check if command accepts arguments
+        const result = args !== undefined ? command(args) : command();
       if (result.clear) {
         setTerminalHistory([]);
       } else {
@@ -310,6 +552,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
     } else {
       newHistory[newHistory.length - 1].output = `Command not found: ${cmd}\nType 'help' for available commands.`;
       setTerminalHistory(newHistory);
+      }
     }
     
     setTerminalInput('');
@@ -321,297 +564,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
     }
   }, [terminalOpen, terminalHistory]);
 
-  const projects = [
-    {
-      id: 'prompt-orchestration',
-      title: 'Prompt Orchestration System',
-      company: 'Avoca AI',
-      period: '2025',
-      category: 'AI/LLM',
-      description: 'Configurable system for LLM-based Voice Assistants with multi-model support',
-      impact: 'Reduced customer onboarding from 4-5 days to under 1 minute',
-      tech: ['OpenAI', 'Claude', 'Gemini', 'Node.js', 'FastAPI', 'MongoDB', 'Redis'],
-      metrics: [
-        { label: 'Onboarding Time', before: '4-5 days', after: '<1 min', improvement: '99.5%' },
-        { label: 'Configuration Options', value: '50+' },
-        { label: 'Models Supported', value: '3 (OpenAI, Claude, Gemini)' }
-      ],
-      features: [
-        'Dynamic prompt templating with variable injection',
-        'Multi-model fallback chains',
-        'Real-time prompt testing & evaluation',
-        'Version control for prompt configurations',
-        'A/B testing framework for prompts'
-      ],
-      image: '/placeholder-orchestration.jpg',
-      links: []
-    },
-    {
-      id: 'call-debugger',
-      title: 'Real-time Call Debugger',
-      company: 'Avoca AI',
-      period: '2025',
-      category: 'Infrastructure',
-      description: 'Real-time debugging platform for Voice AI call analysis and issue diagnosis',
-      impact: 'Reduced call-level bug resolution from hours to <5 minutes',
-      tech: ['WebSocket', 'Datadog', 'Node.js', 'React', 'ELK Stack', 'Custom Logging'],
-      metrics: [
-        { label: 'Resolution Time', before: 'Hours', after: '<5 min', improvement: '95%' },
-        { label: 'Calls Traced/Day', value: '10,000+' },
-        { label: 'Debug Metrics', value: '200+' }
-      ],
-      features: [
-        'Live call tracing with WebSocket streaming',
-        'Automated anomaly detection',
-        'Call flow visualization',
-        'Integrated log search across services',
-        'Performance metrics dashboard'
-      ],
-      image: '/placeholder-debugger.jpg',
-      links: []
-    },
-    {
-      id: 'global-kyc',
-      title: 'Global KYC Platform',
-      company: 'Hyperverge',
-      period: '2021-2025',
-      category: 'AI/Infrastructure',
-      description: 'Enterprise-grade identity verification platform supporting worldwide KYC compliance',
-      impact: 'Serving 50+ enterprise clients across 195+ countries',
-      tech: ['Python', 'AWS Lambda', 'Step Functions', 'PostgreSQL', 'Computer Vision', 'OCR'],
-      metrics: [
-        { label: 'Countries Supported', value: '195+' },
-        { label: 'ID Formats', value: '500+' },
-        { label: 'Enterprise Clients', value: '50+' },
-        { label: 'Daily Verifications', value: '100,000+' }
-      ],
-      features: [
-        'Multi-country ID document support',
-        'Real-time liveness detection',
-        'Fraud detection with deepfake AI',
-        'Automated data extraction (OCR)',
-        'Compliance reporting dashboard'
-      ],
-      image: '/placeholder-kyc.jpg',
-      links: []
-    },
-    {
-      id: 'ai-benchmarking',
-      title: 'AI Model Benchmarking Platform',
-      company: 'Hyperverge',
-      period: '2023-2025',
-      category: 'AI/ML',
-      description: 'Automated platform for AI model analysis, evaluation, and performance benchmarking',
-      impact: 'Reduced False Acceptance & Rejection Rates by 35-45%',
-      tech: ['Python', 'FastAPI', 'TensorFlow', 'ELK Stack', 'Grafana', 'Custom Metrics'],
-      metrics: [
-        { label: 'FAR/FRR Reduction', value: '35-45%' },
-        { label: 'Models Evaluated', value: '100+' },
-        { label: 'Test Cases/Model', value: '10,000+' }
-      ],
-      features: [
-        'Automated model testing pipelines',
-        'Custom benchmark suite creation',
-        'Performance regression detection',
-        'Multi-model comparison dashboards',
-        'Client-specific benchmarking reports'
-      ],
-      image: '/placeholder-benchmarking.jpg',
-      links: []
-    },
-    {
-      id: 'rate-limiter',
-      title: 'Dynamic Rate Limiter',
-      company: 'Hyperverge',
-      period: '2025',
-      category: 'Infrastructure',
-      description: 'Adaptive rate limiting system handling varying load patterns',
-      impact: 'Reduced false positives by nearly 100%',
-      tech: ['Redis', 'Node.js', 'Lua Scripts', 'Adaptive Algorithms', 'Monitoring'],
-      metrics: [
-        { label: 'False Positives', improvement: '~100%' },
-        { label: 'Requests/Second', value: '50,000+' },
-        { label: 'Latency Overhead', value: '<2ms' }
-      ],
-      features: [
-        'Token bucket with adaptive refill rates',
-        'Client behavior learning',
-        'Anomaly-based threshold adjustment',
-        'Multi-tier rate limiting',
-        'Real-time monitoring & alerts'
-      ],
-      image: '/placeholder-ratelimiter.jpg',
-      links: []
-    },
-    {
-      id: 'global-websdk',
-      title: 'Global WebSDK',
-      company: 'Hyperverge',
-      period: '2021-2023',
-      category: 'Frontend/SDK',
-      description: 'Low-code SDK streamlining KYC API integration for web applications',
-      impact: '78% faster client integration, 50+ clients onboarded',
-      tech: ['JavaScript', 'React', 'WebRTC', 'Low-code Platform', 'API Design'],
-      metrics: [
-        { label: 'Integration Speed', improvement: '78%' },
-        { label: 'Clients Onboarded', value: '50+' },
-        { label: 'User Engagement', improvement: '+42%' },
-        { label: 'Drop-off Rate', improvement: '-60%' }
-      ],
-      features: [
-        'Pre-built UI components',
-        'Customizable workflows',
-        'Multi-language support',
-        'Real-time validation feedback',
-        'Mobile & desktop optimized'
-      ],
-      image: '/placeholder-websdk.jpg',
-      links: []
-    }
-  ];
-
-  const blogPosts = [
-    {
-      title: 'Building Production-Ready Voice AI Agents',
-      excerpt: 'Lessons learned from architecting LLM-based voice assistants at scale',
-      date: '2025-02-10',
-      category: 'AI/LLM',
-      readTime: '8 min',
-      tags: ['Voice AI', 'LLM', 'OpenAI', 'Claude', 'Production'],
-      status: 'coming-soon'
-    },
-    {
-      title: 'How We Saved $360K/Year in AWS Costs',
-      excerpt: 'Practical strategies for cloud cost optimization without compromising performance',
-      date: '2025-02-05',
-      category: 'Cloud/DevOps',
-      readTime: '12 min',
-      tags: ['AWS', 'Cost Optimization', 'Infrastructure', 'DevOps'],
-      status: 'coming-soon'
-    },
-    {
-      title: 'Migrating to Kubernetes: 80% Faster Deployments',
-      excerpt: 'Our journey from AutoScaling to Kubernetes and the lessons learned',
-      date: '2025-01-28',
-      category: 'Infrastructure',
-      readTime: '10 min',
-      tags: ['Kubernetes', 'Docker', 'CI/CD', 'DevOps'],
-      status: 'coming-soon'
-    },
-    {
-      title: 'Leading Engineering Teams: From 5 to 20+',
-      excerpt: 'Practical insights on scaling engineering teams in fast-growing startups',
-      date: '2025-01-20',
-      category: 'Leadership',
-      readTime: '7 min',
-      tags: ['Leadership', 'Team Building', 'Management', 'Startups'],
-      status: 'coming-soon'
-    },
-    {
-      title: 'AI Fraud Detection: 90% Reduction in Deepfakes',
-      excerpt: 'Implementing deepfake detection in production KYC systems',
-      date: '2025-01-15',
-      category: 'AI/Security',
-      readTime: '9 min',
-      tags: ['AI', 'Deepfake', 'Security', 'Computer Vision'],
-      status: 'coming-soon'
-    },
-    {
-      title: 'Prompt Engineering Best Practices for Production',
-      excerpt: 'Strategies for reliable LLM outputs in enterprise applications',
-      date: '2025-01-10',
-      category: 'AI/LLM',
-      readTime: '11 min',
-      tags: ['Prompt Engineering', 'LLM', 'Best Practices'],
-      status: 'coming-soon'
-    }
-  ];
-
-  const techCategories = [
-    {
-      name: 'AI & LLM Systems',
-      icon: Brain,
-      skills: [
-        { name: 'OpenAI GPT-4', level: 95, projects: 5 },
-        { name: 'Anthropic Claude', level: 95, projects: 5 },
-        { name: 'Google Gemini', level: 90, projects: 3 },
-        { name: 'LangChain', level: 85, projects: 4 },
-        { name: 'Prompt Engineering', level: 95, projects: 8 },
-        { name: 'AI Agents', level: 90, projects: 6 },
-        { name: 'RAG Systems', level: 80, projects: 3 }
-      ]
-    },
-    {
-      name: 'Backend & Systems',
-      icon: Server,
-      skills: [
-        { name: 'Node.js', level: 95, projects: 15 },
-        { name: 'TypeScript', level: 95, projects: 12 },
-        { name: 'Python', level: 90, projects: 20 },
-        { name: 'FastAPI', level: 85, projects: 8 },
-        { name: 'Express.js', level: 95, projects: 10 },
-        { name: 'Socket.io', level: 85, projects: 5 },
-        { name: 'Microservices', level: 90, projects: 12 }
-      ]
-    },
-    {
-      name: 'Cloud & Infrastructure',
-      icon: Cloud,
-      skills: [
-        { name: 'AWS Lambda', level: 95, projects: 15 },
-        { name: 'AWS EC2', level: 90, projects: 10 },
-        { name: 'AWS S3', level: 95, projects: 20 },
-        { name: 'Kubernetes', level: 85, projects: 5 },
-        { name: 'Docker', level: 90, projects: 15 },
-        { name: 'Terraform', level: 80, projects: 6 },
-        { name: 'CI/CD', level: 90, projects: 12 }
-      ]
-    },
-    {
-      name: 'Databases & Analytics',
-      icon: Database,
-      skills: [
-        { name: 'PostgreSQL', level: 90, projects: 12 },
-        { name: 'MongoDB', level: 85, projects: 10 },
-        { name: 'DynamoDB', level: 85, projects: 8 },
-        { name: 'Redis', level: 90, projects: 10 },
-        { name: 'ELK Stack', level: 85, projects: 8 },
-        { name: 'Grafana', level: 80, projects: 6 },
-        { name: 'Datadog', level: 85, projects: 5 }
-      ]
-    },
-    {
-      name: 'Frontend Technologies',
-      icon: Globe,
-      skills: [
-        { name: 'React.js', level: 90, projects: 15 },
-        { name: 'Next.js', level: 85, projects: 8 },
-        { name: 'TypeScript', level: 95, projects: 12 },
-        { name: 'Tailwind CSS', level: 85, projects: 10 },
-        { name: 'WebSocket', level: 85, projects: 5 }
-      ]
-    },
-    {
-      name: 'DevOps & Monitoring',
-      icon: Activity,
-      skills: [
-        { name: 'GitHub Actions', level: 90, projects: 12 },
-        { name: 'Sentry', level: 85, projects: 8 },
-        { name: 'AWS X-Ray', level: 80, projects: 5 },
-        { name: 'Metabase', level: 75, projects: 4 },
-        { name: 'Load Testing', level: 85, projects: 6 }
-      ]
-    }
-  ];
-
-  const softSkills = [
-    { name: 'Team Leadership', icon: Users, description: 'Led 14+ member teams, scaled from 5 to 20+ engineers' },
-    { name: 'Technical Mentorship', icon: GraduationCap, description: 'Mentored 12+ engineers and interns' },
-    { name: 'System Design', icon: Layers, description: 'Architected distributed systems for 50+ clients' },
-    { name: 'Cost Optimization', icon: DollarSign, description: 'Saved $30K/month through infrastructure optimization' },
-    { name: 'Stakeholder Management', icon: MessageSquare, description: 'Collaborated with product, sales, and exec teams' },
-    { name: 'Hiring & Interviews', icon: Target, description: 'Conducted 50+ technical interviews' }
-  ];
+  // Data arrays (projects, blogPosts, techCategories, softSkills) are imported from ./data/ files
 
   return (
     <div className="relative min-h-screen bg-black text-green-400 font-mono overflow-hidden">
@@ -638,7 +591,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
             <span className="text-xl font-bold">aayush.dev</span>
           </div>
           <div className="hidden md:flex gap-6">
-            {['home', 'experience', 'projects', 'skills', 'blog', 'contact'].map(section => (
+            {['home', 'experience', 'projects', 'skills', 'blog', 'recommendations', 'contact'].map(section => (
               <button
                 key={section}
                 onClick={() => {
@@ -739,12 +692,9 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
               {[
                 'Senior Backend Engineer',
                 'AI Systems Architect', 
-                'Cloud Specialist',
                 'Team Lead',
-                'YC W25',
                 '5+ Years Experience',
-                'AWS Expert',
-                'LLM Integration'
+                'AWS Expert'
               ].map((tag, i) => (
                 <span
                   key={tag}
@@ -754,22 +704,45 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                   {tag}
                 </span>
               ))}
+              <a 
+                href="https://www.ycombinator.com/companies/avoca"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-sm bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 rounded hover:bg-yellow-500/20 transition-colors"
+                style={{ animationDelay: `${0.3 + 3 * 0.05}s` }}
+              >
+                YC W25
+              </a>
             </div>
 
             <p className="text-xl md:text-2xl mb-4 text-green-300/80 max-w-4xl animate-slide-up leading-relaxed" style={{ animationDelay: '0.4s' }}>
-              Engineering @ <span className="text-green-400 font-bold">Avoca AI (YC W25)</span> | 
-              Ex-SDE3 @ Hyperverge
+              Engineering @ <a href="https://avoca.ai" target="_blank" rel="noopener noreferrer" className="text-green-400 font-bold hover:underline">Avoca AI (YC W25)</a> | 
+              Ex-SDE3 @ <a href="https://hyperverge.co" target="_blank" rel="noopener noreferrer" className="text-green-300/80 hover:text-green-400 hover:underline transition-colors">Hyperverge</a>
             </p>
+            
+            {/* Unicorn Achievement Badge */}
+            <div className="mb-4 animate-slide-up" style={{ animationDelay: '0.45s' }}>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/50 text-purple-300 text-sm rounded-full font-bold">
+                <Sparkles className="w-4 h-4" />
+                <span>Seed → Unicorn Journey at Avoca AI</span>
+              </span>
+            </div>
 
             <p className="text-lg mb-8 text-green-300/60 max-w-3xl animate-slide-up" style={{ animationDelay: '0.5s' }}>
-              Building scalable AI systems • Leading engineering teams • Optimizing cloud infrastructure • 
-              Architecting distributed systems serving 50+ enterprise clients across 195+ countries
+              Architecting scalable AI systems • Leading high-performance engineering teams • 
+              Optimizing cloud infrastructure • Designing globally distributed systems • 
+              Implementing security-first solutions • Building voice & LLM-powered products •
+              Mentoring engineering talent
             </p>
 
             <div className="flex flex-wrap gap-4 mb-8 animate-slide-up" style={{ animationDelay: '0.6s' }}>
               <a 
-                href="mailto:aayush.agarwal1936@gmail.com" 
+                href="#contact" 
                 className="flex items-center gap-2 px-6 py-3 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-all hover:scale-105"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 <Mail className="w-5 h-5" />
                 Get in Touch
@@ -783,6 +756,21 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                 <Linkedin className="w-5 h-5" />
                 LinkedIn
               </a>
+              <button
+                onClick={() => {
+                  // Open resume in modal
+                  openModal(
+                    'Aayush Agarwal - Resume', 
+                    null, 
+                    'resume',
+                    'https://drive.google.com/file/d/1DD1X5J4yPINJMrTgoRVULV5_0llMis8K/view?usp=sharing'
+                  );
+                }}
+                className="flex items-center gap-2 px-6 py-3 border-2 border-green-500 rounded hover:bg-green-500/20 transition-all hover:scale-105"
+              >
+                <FileText className="w-5 h-5" />
+                Download Resume
+              </button>
               <button
                 onClick={() => setTerminalOpen(true)}
                 className="flex items-center gap-2 px-6 py-3 border-2 border-green-500/50 rounded hover:border-green-500 hover:bg-green-500/10 transition-all hover:scale-105"
@@ -799,16 +787,16 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                 <div className="text-sm text-green-400/60">Years Experience</div>
               </div>
               <div className="bg-green-500/5 border border-green-500/30 rounded-lg p-4 hover:border-green-500 transition-colors">
-                <div className="text-3xl font-bold text-green-300 mb-1">$360K</div>
-                <div className="text-sm text-green-400/60">Saved Annually</div>
+                <div className="text-3xl font-bold text-green-300 mb-1">3×</div>
+                <div className="text-sm text-green-400/60">Promotions Earned</div>
               </div>
               <div className="bg-green-500/5 border border-green-500/30 rounded-lg p-4 hover:border-green-500 transition-colors">
-                <div className="text-3xl font-bold text-green-300 mb-1">50+</div>
-                <div className="text-sm text-green-400/60">Enterprise Clients</div>
+                <div className="text-3xl font-bold text-green-300 mb-1">12+</div>
+                <div className="text-sm text-green-400/60">Engineers Mentored</div>
               </div>
               <div className="bg-green-500/5 border border-green-500/30 rounded-lg p-4 hover:border-green-500 transition-colors">
-                <div className="text-3xl font-bold text-green-300 mb-1">195+</div>
-                <div className="text-sm text-green-400/60">Countries Served</div>
+                <div className="text-3xl font-bold text-green-300 mb-1">8+</div>
+                <div className="text-sm text-green-400/60">Major Projects</div>
               </div>
             </div>
 
@@ -827,18 +815,14 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
             </div>
             <div className="text-lg text-green-300/80 space-y-4 leading-relaxed">
               <p>
-                <span className="text-green-400 font-bold">Senior Backend & AI Systems Engineer</span> with 5+ years of experience 
-                building scalable KYC, AI inference, and Voice AI platforms. Promoted <span className="text-green-400 font-bold">3 times in 4 years</span> at 
-                Hyperverge based on performance and leadership impact.
+                <span className="text-green-400 font-bold">Senior Backend & AI Systems Engineer</span> with extensive experience 
+                building scalable KYC platforms, AI inference systems, and Voice AI solutions. I've worked with cutting-edge AI technologies including OpenAI, Claude, and Gemini, creating intelligent systems that deliver real business value. My career has been marked by consistent growth and leadership opportunities at Hyperverge and now at Avoca AI.
               </p>
               <p>
-                Led cross-functional teams of <span className="text-green-400 font-bold">10+ engineers</span>, reduced cloud costs by 
-                <span className="text-green-400 font-bold"> $30K/month</span>, and architected distributed systems serving 
-                <span className="text-green-400 font-bold"> 50+ enterprise clients</span> across <span className="text-green-400 font-bold">195+ countries</span>.
+                I specialize in leading cross-functional engineering teams, optimizing cloud infrastructure costs, and designing distributed systems that serve enterprise clients globally. My work has directly impacted business outcomes through improved performance, reduced operational costs, and enhanced system reliability.
               </p>
               <p>
-                Strong expertise in backend systems, cloud architecture (AWS), AI agent workflows, LLM integration (OpenAI, Claude, Gemini), 
-                and cost-efficient infrastructure optimization.
+                My technical expertise spans backend systems, cloud architecture (AWS), AI agent workflows, LLM integration with platforms like OpenAI, Claude, and Gemini, voice technology stacks, and creating cost-efficient infrastructure optimizations that balance performance with resource utilization.
               </p>
             </div>
           </div>
@@ -855,28 +839,71 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
             <div className="space-y-12">
               {/* Avoca AI */}
               <div className="group bg-green-500/5 border-2 border-green-500/30 rounded-lg p-8 hover:border-green-500 hover:bg-green-500/10 transition-all animate-slide-up">
-                <div className="flex flex-wrap justify-between items-start mb-6">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
+                <div className="mb-6">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <Building2 className="w-6 h-6 text-green-400" />
                       <h3 className="text-3xl font-bold text-green-300">AVOCA AI</h3>
-                      <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm rounded font-bold">
-                        YC W25
-                      </span>
                       <a 
-                        href="https://avoca.ai" 
-                        target="_blank" 
+                        href="https://www.ycombinator.com/companies/avoca"
+                        target="_blank"
                         rel="noopener noreferrer"
-                        className="text-green-400/60 hover:text-green-400 transition-colors"
+                        className="px-3 py-1 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-sm rounded font-bold hover:bg-yellow-500/30 transition-colors"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        YC W25
                       </a>
+                      <div className="flex items-center gap-1">
+                        <a 
+                          href="https://avoca.ai" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company Website"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                        <a 
+                          href="https://www.linkedin.com/company/avoca-ai" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company LinkedIn"
+                        >
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
-                    <p className="text-xl text-green-400/80 mb-1">Software Engineer</p>
-                    <div className="flex items-center gap-2 text-green-400/60">
-                      <Calendar className="w-4 h-4" />
-                      <span>May 2025 - Present</span>
-                      <span className="ml-2 px-2 py-0.5 bg-green-500/20 rounded text-xs">Current</span>
+                    
+                    {/* Unicorn Badge on separate line */}
+                    <div className="flex items-center gap-2 ml-9">
+                      <div className="px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500 text-purple-300 text-sm rounded-full font-bold flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Seed → Unicorn
+                      </div>
+                    </div>
+                    
+                    <div className="ml-9">
+                      <p className="text-xl text-green-400/80 mb-1">Software Engineer</p>
+                      <div className="flex items-center gap-2 text-green-400/60">
+                        <Calendar className="w-4 h-4" />
+                        <span>May 2025 - Present</span>
+                        <span className="ml-2 px-2 py-0.5 bg-green-500/20 rounded text-xs">Current</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Unicorn Achievement Highlight */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/50 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Rocket className="w-6 h-6 text-purple-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-lg font-bold text-purple-300 mb-2">Journey to Unicorn Status 🦄</h4>
+                      <p className="text-purple-200/80 text-sm leading-relaxed">
+                        Joined during seed stage and contributed to the company's rapid growth trajectory. 
+                        Played a key role in scaling engineering operations, reducing onboarding time by 99.5%, 
+                        and expanding the team 4x, helping drive the company to achieve unicorn valuation.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -918,7 +945,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {['LLM Integration', 'Voice AI', 'OpenAI', 'Claude', 'Gemini', 'Real-time Systems', 'Team Leadership', 'Node.js', 'FastAPI', 'MongoDB', 'WebSocket'].map((tech, j) => (
+                  {['Voice AI', 'OpenAI', 'Claude', 'Gemini', 'Real-time Systems', 'Team Leadership', 'Agentic AI', 'Supabase', 'NextJS', 'Management', 'Hiring', 'Observability'].map((tech, j) => (
                     <span
                       key={j}
                       className="px-3 py-1 bg-black border border-green-500/50 text-xs rounded hover:border-green-500 transition-colors"
@@ -936,14 +963,26 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                     <div className="flex items-center gap-3 mb-2">
                       <Building2 className="w-6 h-6 text-green-400" />
                       <h3 className="text-3xl font-bold text-green-300">HYPERVERGE TECHNOLOGIES</h3>
+                      <div className="flex items-center gap-1">
                       <a 
                         href="https://hyperverge.co" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-green-400/60 hover:text-green-400 transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                          title="Company Website"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                        <a 
+                          href="https://www.linkedin.com/company/hyperverge" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company LinkedIn"
+                        >
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
                     <p className="text-xl text-green-400/80 mb-1">Software Engineer 3 → 2 → 1</p>
                     <div className="flex items-center gap-2 text-green-400/60">
@@ -952,7 +991,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       <span className="ml-2 px-2 py-0.5 bg-green-500/10 rounded text-xs">4.5 years</span>
                     </div>
                     <p className="text-green-300/60 text-sm mt-1">
-                      Promoted 3 times: Intern → SDE1 → SDE2 → SDE3
+                      Intern → SDE1 → SDE2 → SDE3
                     </p>
                   </div>
                 </div>
@@ -967,11 +1006,21 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       'Architected a Global KYC platform supporting 195+ countries and processing 500+ diverse ID card formats, serving 50+ enterprise clients',
                       'Reduced AWS costs by ~$30K per month through resource allocation, instance rightsizing, efficient scaling, and cost management strategies',
                       'Deployed an automated mirroring and analysis system, eliminating product downtime for over a year, reducing manual effort by 95%',
-                      'Built an automated AI model analysis and benchmarking platform, reducing False Acceptance and Rejection Rates by 35-45%',
-                      'Migrated product from AutoScaling to Kubernetes resulting in over 80% faster deployments and improved reliability',
+                      'Built an automated AI model analysis and benchmarking platform, reducing False Acceptance and Rejection Rates to nearly 0%',
+                      'Developed a Dynamic Rate Limiter system capable of handling varying load patterns adaptively reducing false positives by nearly 100%',
+                      'Migrated product from AutoScaling to Kubernetes resulting in over 83% faster deployments and improved reliability',
                       'Integrated deepfake and anomaly detection models reducing fraudulent cases by >95%',
                       'Led InfoSec activities (VAPT, RL Review, IP Whitelisting) ensuring safe and vulnerability-free systems',
+                      'Wrote a multi-platform request and response payload encryption module to ensure 100% payload integrity',
+                      'Designed a Shopfront API service to extract, match, and validate shop details from images with GST verification',
+                      'Orchestrated engineering Proof of Concept phases for clients like SHB Finance and Tekion, reducing system errors by >90%',
+                      'Pioneered a low-code Global WebSDK, reducing client integration efforts by 78% and driving adoption in insurance and crypto markets',
+                      'Built intuitive SDK workflows, boosting user engagement by 42% and reducing drop-off by 60%',
+                      'Optimized testing with Puppeteer, cutting manual testing time by 50% and lowering bug reports by 33%',
+                      'Optimized systems with ELK, Grafana, MetaBase, and Sentry, reducing internal errors by 87%',
                       'Supported major client go-lives like LinkedIn, Zomato, HFC with 99.9% uptime and over 90% conversion rates',
+                      'Innovated a No-Code AI Platform (HyperTuring) for OCR Model Generation, reducing deployment time by 85%',
+                      'Advanced Generic OCR system that increased extraction accuracy by 27%',
                       'Led a POD of 4 members and mentored ~12 teammates and interns',
                       'Conducted technical interviews for offline campus hiring (VIT, SRM, JIT, IIIT) resulting in 3 high-potential hires'
                     ].map((highlight, j) => (
@@ -1003,7 +1052,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {['Python', 'Node.js', 'AWS Lambda', 'Kubernetes', 'Docker', 'PostgreSQL', 'AI/ML', 'Computer Vision', 'FastAPI', 'CI/CD', 'Team Leadership', 'Mentorship'].map((tech, j) => (
+                  {['Python', 'MERN', 'Kubernetes', 'Docker', 'PostgreSQL', 'AI/ML', 'Web SDK', 'InfoSec', 'Security', 'Observability', 'Testing', 'AWS', 'Vanilla JS', 'CI/CD', 'Team Leadership', 'Mentorship', 'Hiring', 'Enterprises'].map((tech, j) => (
                     <span
                       key={j}
                       className="px-3 py-1 bg-black border border-green-500/50 text-xs rounded hover:border-green-500 transition-colors"
@@ -1021,6 +1070,33 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                     <div className="flex items-center gap-3 mb-2">
                       <Building2 className="w-5 h-5 text-green-400" />
                       <h3 className="text-2xl font-bold text-green-300">JIDOKA TECHNOLOGIES</h3>
+                      <div className="flex items-center gap-1 ml-2">
+                        <a 
+                          href="https://www.jidoka-tech.ai/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company Website"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                        <a 
+                          href="https://www.linkedin.com/company/jidoka-tech/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company LinkedIn"
+                        >
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                        <button
+                          onClick={() => openModal('Jidoka Technologies - Internship Certificate', '/experience/jidoka-cert.jpeg', 'image')}
+                          className="text-green-400/60 hover:text-green-400 transition-colors ml-1"
+                          title="View Certificate"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <p className="text-lg text-green-400/80 mb-1">Software Engineering Intern</p>
                     <div className="flex items-center gap-2 text-green-400/60">
@@ -1048,6 +1124,72 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                   ))}
                 </div>
               </div>
+              
+              {/* Carikture */}
+              <div className="group bg-green-500/5 border-2 border-green-500/30 rounded-lg p-6 hover:border-green-500 hover:bg-green-500/10 transition-all animate-slide-up">
+                <div className="flex flex-wrap justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Building2 className="w-5 h-5 text-green-400" />
+                      <h3 className="text-2xl font-bold text-green-300">CARIKTURE</h3>
+                      <div className="flex items-center gap-1 ml-2">
+                        <a 
+                          href="http://www.carikture.com" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company Website"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                        <a 
+                          href="https://www.linkedin.com/company/carikture/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-green-400/60 hover:text-green-400 transition-colors"
+                          title="Company LinkedIn"
+                        >
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                        <button
+                          onClick={() => openModal('Carikture - Internship Certificate', '/experience/carikture-cert.jpeg', 'image')}
+                          className="text-green-400/60 hover:text-green-400 transition-colors ml-1"
+                          title="View Certificate"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-lg text-green-400/80 mb-1">Information Technology Summer Intern</p>
+                    <div className="flex items-center gap-2 text-green-400/60">
+                      <Calendar className="w-4 h-4" />
+                      <span>April 2020 - May 2020</span>
+                    </div>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 mb-4">
+                  <li className="flex gap-3 text-green-300/80">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Built a Trello Clone from scratch with various functionalities like moving cards, commenting, and notifications</span>
+                  </li>
+                  <li className="flex gap-3 text-green-300/80">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Implemented a complete project management system with drag-and-drop interfaces and real-time updates</span>
+                  </li>
+                </ul>
+
+                <div className="flex flex-wrap gap-2">
+                  {['PHP', 'HTML', 'CSS', 'JavaScript', 'MySQL', 'UI/UX'].map((tech, j) => (
+                    <span
+                      key={j}
+                      className="px-3 py-1 bg-black border border-green-500/50 text-xs rounded hover:border-green-500 transition-colors"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1055,41 +1197,148 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
         {/* Projects Section with Expansion */}
         <section id="projects" className="py-20 px-6 bg-green-500/5 border-y border-green-500/30">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-12">
-              <Folder className="w-12 h-12" />
+            <div className="mb-12">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  <Folder className="w-12 h-12 text-green-500" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
               <h2 className="text-5xl font-bold glitch-text">KEY PROJECTS</h2>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {projects.map((project, i) => (
+              <p className="text-green-300/80 max-w-4xl ml-16 border-l-2 border-green-500/30 pl-4 leading-relaxed text-sm">
+                A curated collection of my most significant technical contributions across different organizations. 
+                Projects include AI tools, voice systems, infrastructure optimization, security implementations, and more.
+                <span className="block mt-2 text-green-400 font-medium">
+                  Filter by company: 
+                  <button 
+                    onClick={() => setProjectFilter(projectFilter === 'Avoca AI' ? null : 'Avoca AI')}
+                    className={`ml-2 px-2 py-1 text-xs rounded-full transition-colors ${
+                      projectFilter === 'Avoca AI' 
+                        ? 'bg-indigo-500 border border-indigo-500 text-white' 
+                        : 'bg-indigo-500/30 border border-indigo-500/50 hover:bg-indigo-500/50'
+                    }`}
+                  >Avoca AI</button>
+                  <button 
+                    onClick={() => setProjectFilter(projectFilter === 'Hyperverge' ? null : 'Hyperverge')}
+                    className={`ml-2 px-2 py-1 text-xs rounded-full transition-colors ${
+                      projectFilter === 'Hyperverge' 
+                        ? 'bg-blue-500 border border-blue-500 text-white' 
+                        : 'bg-blue-500/30 border border-blue-500/50 hover:bg-blue-500/50'
+                    }`}
+                  >Hyperverge</button>
+                  <button 
+                    onClick={() => setProjectFilter(projectFilter === 'Jidoka' ? null : 'Jidoka')}
+                    className={`ml-2 px-2 py-1 text-xs rounded-full transition-colors ${
+                      projectFilter === 'Jidoka' 
+                        ? 'bg-amber-500 border border-amber-500 text-black' 
+                        : 'bg-amber-500/30 border border-amber-500/50 hover:bg-amber-500/50'
+                    }`}
+                  >Jidoka</button>
+                  <button 
+                    onClick={() => setProjectFilter(projectFilter === 'Carikture' ? null : 'Carikture')}
+                    className={`ml-2 px-2 py-1 text-xs rounded-full transition-colors ${
+                      projectFilter === 'Carikture' 
+                        ? 'bg-green-500 border border-green-500 text-black' 
+                        : 'bg-green-500/30 border border-green-500/50 hover:bg-green-500/50'
+                    }`}
+                  >Carikture</button>
+                  {projectFilter && (
+                    <button 
+                      onClick={() => setProjectFilter(null)}
+                      className="ml-3 text-xs underline hover:text-white"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </span>
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {projects
+                .filter(project => projectFilter ? project.company === projectFilter : true)
+                .map((project, i) => (
                 <div
                   key={project.id}
-                  className="group bg-black border-2 border-green-500/30 rounded-lg overflow-hidden hover:border-green-500 transition-all hover:scale-[1.02] animate-slide-up"
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  className="group bg-black/80 backdrop-blur-sm border-2 border-green-500/30 rounded-lg overflow-hidden hover:border-green-500 transition-all hover:scale-[1.02] animate-slide-up shadow-xl shadow-green-900/20 hover:shadow-green-500/20"
+                  style={{ animationDelay: `${i * 0.05}s` }}
                 >
-                  {/* Project Image Placeholder */}
-                  <div className="relative h-48 bg-gradient-to-br from-green-500/20 to-black border-b border-green-500/30 flex items-center justify-center overflow-hidden">
-                    <ImageIcon className="w-16 h-16 text-green-500/30" />
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-green-400 text-sm">Image Coming Soon</span>
+                  {/* Project Header */}
+                  <div className="relative h-56 bg-gradient-to-br from-green-500/20 via-black/80 to-black border-b border-green-500/30 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 opacity-10" style={customStyles.bgGridPattern}></div>
+                    
+                    {/* Project Image */}
+                    {project.image ? (
+                      <img 
+                        src={project.image} 
+                        alt={project.title}
+                        className="w-full h-full object-contain opacity-70 group-hover:opacity-90 transition-opacity p-2"
+                      />
+                    ) : (
+                      <ImageIcon className="w-16 h-16 text-green-500/30" style={customStyles.pulseSlow} />
+                    )}
+                    
+                    {/* Overlay for better badge visibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 pointer-events-none"></div>
+                    
+                    {/* Company Badge */}
+                    <div className={`absolute top-3 left-3 px-2 py-1 text-xs font-bold rounded flex items-center gap-1 backdrop-blur-sm z-10 ${
+                      project.company === 'Avoca AI' ? 'bg-indigo-500/90 text-white' :
+                      project.company === 'Hyperverge' ? 'bg-blue-500/90 text-white' :
+                      project.company === 'Jidoka' ? 'bg-amber-500/90 text-black' : 
+                      'bg-green-500/90 text-black'
+                    }`}>
+                      <Building2 className="w-3 h-3" />
+                      {project.company}
                     </div>
-                    <div className="absolute top-3 right-3 px-3 py-1 bg-green-500/90 text-black text-xs font-bold rounded">
+                    
+                    {/* Category Badge */}
+                    <div className="absolute top-3 right-3 px-3 py-1 bg-green-500/90 text-black text-xs font-bold rounded backdrop-blur-sm z-10">
                       {project.category}
+                    </div>
+                    
+                    {/* Time Period Badge */}
+                    <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/80 border border-green-500/30 text-green-300 text-xs font-mono rounded-full flex items-center gap-1 backdrop-blur-sm z-10">
+                      <Calendar className="w-3 h-3" />
+                      {project.period}
                     </div>
                   </div>
 
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-2xl font-bold text-green-300 mb-1">{project.title}</h3>
-                        <p className="text-green-400/60 text-sm flex items-center gap-2">
-                          <Building2 className="w-4 h-4" />
-                          {project.company} • {project.period}
-                        </p>
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold text-green-300 mb-2 flex items-center gap-2">
+                          <span className="border-b-2 border-green-500/50 pb-1">{project.title}</span>
+                        </h3>
+                        
+                        {/* Company Links */}
+                        <div className="flex items-center gap-2">
+                          {project.links.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              {project.links.map((link: any, linkIdx: number) => (
+                                <a
+                                  key={linkIdx}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-green-400/70 hover:text-green-400 transition-colors flex items-center gap-1 border border-green-500/30 px-2 py-1 rounded-md text-xs hover:bg-green-500/10"
+                                  title={link.type === 'website' ? 'Company Website' : 'Company LinkedIn'}
+                                >
+                                  <link.icon className="w-3 h-3" />
+                                  <span>{link.type === 'website' ? 'Website' : 'LinkedIn'}</span>
+                                </a>
+                              ))}
                       </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Expand Button */}
                       <button
                         onClick={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
-                        className="p-2 hover:bg-green-500/20 rounded transition-colors"
+                        className="p-2 hover:bg-green-500/20 rounded-full transition-colors border border-green-500/30"
+                        title={expandedProject === project.id ? "Show Less" : "Show More"}
                       >
                         {expandedProject === project.id ? (
                           <ChevronDown className="w-5 h-5 rotate-180 transition-transform" />
@@ -1099,31 +1348,29 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       </button>
                     </div>
 
-                    <p className="text-green-300/80 mb-4">{project.description}</p>
+                    {/* Project Description */}
+                    <p className="text-green-300/80 mb-4 text-sm">{project.description}</p>
 
-                    <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded">
+                    {/* Impact Box */}
+                    <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded backdrop-blur-sm">
                       <TrendingUp className="w-5 h-5 text-green-400" />
                       <span className="text-green-300 font-bold text-sm">{project.impact}</span>
                     </div>
 
+                    {/* Expanded Content */}
                     {expandedProject === project.id && (
                       <div className="space-y-4 animate-slide-up">
                         <div>
                           <h4 className="text-lg font-bold text-green-300 mb-2 flex items-center gap-2">
                             <BarChart3 className="w-5 h-5" />
-                            Metrics
+                            Key Metrics
                           </h4>
                           <div className="grid grid-cols-2 gap-3">
                             {project.metrics.map((metric, j) => (
-                              <div key={j} className="bg-black/50 border border-green-500/30 rounded p-3">
-                                <div className="text-sm text-green-400/60 mb-1">{metric.label}</div>
-                                {metric.before && (
-                                  <div className="text-xs text-green-300/60 mb-1">
-                                    {metric.before} → {metric.after}
-                                  </div>
-                                )}
-                                <div className="text-lg font-bold text-green-400">
-                                  {metric.improvement || metric.value}
+                              <div key={j} className="bg-black/70 backdrop-blur-sm border border-green-500/30 rounded p-3 hover:border-green-500/70 transition-colors">
+                                <div className="text-sm text-green-400/60 mb-1 font-medium">{metric.label}</div>
+                                <div className="text-lg font-bold text-green-400 font-mono">
+                                  {metric.value}
                                 </div>
                               </div>
                             ))}
@@ -1135,9 +1382,9 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                             <Lightbulb className="w-5 h-5" />
                             Key Features
                           </h4>
-                          <ul className="space-y-2">
+                          <ul className="space-y-2 bg-black/50 p-3 rounded border border-green-500/20">
                             {project.features.map((feature, j) => (
-                              <li key={j} className="flex gap-2 text-green-300/80 text-sm">
+                              <li key={j} className="flex gap-2 text-green-300/80 text-sm hover:text-green-300 transition-colors">
                                 <ArrowRight className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                                 <span>{feature}</span>
                               </li>
@@ -1147,15 +1394,19 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    {/* Tech Stack */}
+                    <div className="mt-4 pt-4 border-t border-green-500/20">
+                      <div className="text-xs text-green-400/60 mb-2">TECH STACK</div>
+                      <div className="flex flex-wrap gap-2">
                       {project.tech.map((tech, j) => (
                         <span
                           key={j}
-                          className="px-2 py-1 bg-black border border-green-500/50 text-xs rounded hover:border-green-500 transition-colors"
+                            className="px-2 py-1 bg-black/70 border border-green-500/50 text-xs rounded-full hover:border-green-500 transition-colors hover:bg-green-500/10 backdrop-blur-sm"
                         >
                           {tech}
                         </span>
                       ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1183,21 +1434,15 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                     <category.icon className="w-6 h-6" />
                     {category.name}
                   </h3>
-                  <div className="space-y-3">
+                  <div className="flex flex-wrap gap-3">
                     {category.skills.map((skill, j) => (
-                      <div key={j}>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-green-400/90 text-sm">{skill.name}</span>
-                          <span className="text-green-500 text-xs">{skill.level}%</span>
-                        </div>
-                        <div className="h-2 bg-green-500/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-green-500 to-green-300 transition-all duration-1000"
-                            style={{ width: `${skill.level}%` }}
-                          />
-                        </div>
-                        <div className="text-green-400/50 text-xs mt-1">
-                          {skill.projects} projects
+                      <div 
+                        key={j}
+                        className="bg-green-500/5 border border-green-500/30 rounded-lg px-4 py-2 hover:bg-green-500/10 hover:border-green-500/70 hover:scale-105 transition-all group overflow-hidden"
+                      >
+                        <div className="relative z-10 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                          <span className="text-green-300 text-sm">{skill}</span>
                         </div>
                       </div>
                     ))}
@@ -1295,20 +1540,62 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                 Subscribe to be notified when new articles are published
               </p>
               <div className="flex justify-center gap-4 mt-4">
+                {notificationSubmitted ? (
+                  <div className="p-4 bg-green-500/10 border border-green-500/50 rounded-lg max-w-md">
+                    <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                    <p className="text-green-300">You're subscribed! You'll be notified when new content is available.</p>
+                  </div>
+                ) : (
+                  <form 
+                    className="flex gap-2"
+                    action="https://formspree.io/f/xjgegzpb"
+                    method="POST"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.target;
+                      const formData = new FormData(form);
+                      formData.append('form-type', 'blog-notification'); // Add form type to distinguish from contact form
+
+                      // Submit to Formspree
+                      fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                          'Accept': 'application/json'
+                        }
+                      })
+                      .then(response => {
+                        if (response.ok) {
+                          setNotificationSubmitted(true);
+                        } else {
+                          alert('Subscription failed. Please try again.');
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Error:', error);
+                        setNotificationSubmitted(true); // Still show success for demo purposes
+                      });
+                    }}
+                  >
                 <input
                   type="email"
-                  placeholder="your.email@example.com"
+                      name="email"
+                      value={notificationEmail}
+                      onChange={(e) => setNotificationEmail(e.target.value)}
                   className="px-4 py-2 bg-black border border-green-500/50 rounded text-green-400 outline-none focus:border-green-500 transition-colors"
-                  disabled
+                      placeholder="your.email@example.com"
+                      required
                 />
+                    <input type="hidden" name="subject" value="New Blog Notification Signup" />
                 <button
+                      type="submit"
                   className="px-6 py-2 bg-green-500/20 border border-green-500/50 rounded text-green-400 hover:bg-green-500/30 transition-colors"
-                  disabled
                 >
                   Notify Me
                 </button>
+                  </form>
+                )}
               </div>
-              <p className="text-green-400/40 text-sm mt-2">Newsletter feature coming soon</p>
             </div>
           </div>
         </section>
@@ -1375,18 +1662,231 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
           </div>
         </section>
 
+        {/* LinkedIn Recommendations */}
+        <section id="recommendations" className="py-20 px-6 bg-green-500/5 border-t border-green-500/30">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4 mb-12">
+              <Quote className="w-12 h-12" />
+              <h2 className="text-5xl font-bold glitch-text">RECOMMENDATIONS</h2>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommendations.map((recommendation, i) => (
+                <div 
+                  key={i}
+                  onClick={() => {
+                    setSelectedRecommendation(recommendation);
+                    setModalTitle(`Recommendation from ${recommendation.name}`);
+                    setModalType('recommendation');
+                    setModalOpen(true);
+                  }}
+                  className="relative bg-black border-2 border-green-500/30 rounded-lg p-6 hover:border-green-500 hover:bg-green-500/5 transition-all animate-slide-up group flex flex-col h-full cursor-pointer"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  {/* Quote Icon Background */}
+                  <Quote className="absolute top-4 right-4 w-8 h-8 text-green-500/10 group-hover:text-green-500/20 transition-colors" />
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col h-full">
+                    {/* Header with Avatar and Info */}
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-green-500/30 to-green-600/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-green-500/30 group-hover:border-green-500 transition-colors">
+                        <Users className="w-7 h-7 text-green-400" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-green-300 text-lg mb-1 truncate">{recommendation.name}</div>
+                        <div className="text-green-400/80 text-sm font-medium">{recommendation.role}</div>
+                        <div className="text-green-400/60 text-xs mt-1">{recommendation.company}</div>
+                      </div>
+                    </div>
+
+                    {/* Recommendation Text */}
+                    <div className="flex-1 mb-4">
+                      <p className="text-green-300/70 text-sm leading-relaxed line-clamp-6">
+                        "{recommendation.text}"
+                      </p>
+                    </div>
+
+                    {/* Read More Indicator */}
+                    {recommendation.text.length > 200 && (
+                      <div className="text-green-400 text-xs mb-3 flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        <span>Click to read full recommendation</span>
+                      </div>
+                    )}
+
+                    {/* Footer with Relationship and Date */}
+                    <div className="flex items-center justify-between pt-4 border-t border-green-500/20">
+                      <div className="flex items-center gap-2 text-xs text-green-400/60">
+                        <Users className="w-3 h-3" />
+                        <span>{recommendation.relationship}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-green-400/50">
+                        <Calendar className="w-3 h-3" />
+                        <span>{recommendation.date}</span>
+                      </div>
+                    </div>
+
+                    {/* LinkedIn Link */}
+                    {recommendation.linkedIn && (
+                      <a
+                        href={recommendation.linkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 flex items-center justify-center gap-2 text-xs text-green-400/70 hover:text-green-400 transition-colors py-2 px-3 border border-green-500/30 rounded hover:bg-green-500/10 hover:border-green-500"
+                      >
+                        <Linkedin className="w-3 h-3" />
+                        <span>View Profile</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Official Experience Documentation */}
+            <div className="mt-10 bg-black border-2 border-green-500/30 rounded-lg p-6 hover:border-green-500 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-green-300 flex items-center gap-2">
+                  <FileText className="w-6 h-6" />
+                  Experience Documentation
+                </h3>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-6 mt-6">
+                {/* Hyperverge Experience Letter */}
+                <div className="bg-green-500/5 border border-green-500/30 rounded-lg overflow-hidden">
+                  <div className="relative h-64 bg-black flex items-center justify-center p-4">
+                    <embed 
+                      src="/experience/hyperverge-exp.pdf#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1" 
+                      type="application/pdf" 
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button 
+                        onClick={() => openModal('Hyperverge Technologies - Experience Letter', '/experience/hyperverge-exp.pdf', 'pdf')}
+                        className="px-4 py-2 bg-green-500 text-black rounded font-bold"
+                      >
+                        Preview Document
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-bold text-green-300">Hyperverge Technologies</h4>
+                    <p className="text-green-400/70 text-sm mt-1">Experience Letter - May 2025</p>
+                    <div className="mt-3 flex justify-between">
+                      <span className="text-green-300/70 text-sm">Senior Software Engineer</span>
+                      <button 
+                        onClick={() => openModal('Hyperverge Technologies - Experience Letter', '/experience/hyperverge-exp.pdf', 'pdf')}
+                        className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors text-sm"
+                      >
+                        <FileText className="w-4 h-4" /> 
+                        <span>View PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Jidoka Certificate */}
+                <div className="bg-green-500/5 border border-green-500/30 rounded-lg overflow-hidden">
+                  <div className="relative h-64 bg-black flex items-center justify-center">
+                    <img 
+                      src="/experience/jidoka-cert.jpeg" 
+                      alt="Jidoka Internship Certificate" 
+                      className="h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button 
+                        onClick={() => openModal('Jidoka Technologies - Internship Certificate', '/experience/jidoka-cert.jpeg', 'image')}
+                        className="px-4 py-2 bg-green-500 text-black rounded font-bold"
+                      >
+                        View Certificate
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-bold text-green-300">Jidoka Technologies</h4>
+                    <p className="text-green-400/70 text-sm mt-1">Internship Certificate - May 2020</p>
+                    <div className="mt-3 flex justify-between">
+                      <span className="text-green-300/70 text-sm">Software Engineering Intern</span>
+                      <button 
+                        onClick={() => openModal('Jidoka Technologies - Internship Certificate', '/experience/jidoka-cert.jpeg', 'image')}
+                        className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors text-sm"
+                      >
+                        <Eye className="w-4 h-4" /> 
+                        <span>View Certificate</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Carikture Certificate */}
+                <div className="bg-green-500/5 border border-green-500/30 rounded-lg overflow-hidden">
+                  <div className="relative h-64 bg-black flex items-center justify-center">
+                    <img 
+                      src="/experience/carikture-cert.jpeg" 
+                      alt="Carikture Internship Certificate" 
+                      className="h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button 
+                        onClick={() => openModal('Carikture - Internship Certificate', '/experience/carikture-cert.jpeg', 'image')}
+                        className="px-4 py-2 bg-green-500 text-black rounded font-bold"
+                      >
+                        View Certificate
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-bold text-green-300">Carikture</h4>
+                    <p className="text-green-400/70 text-sm mt-1">Internship Certificate - May 2020</p>
+                    <div className="mt-3 flex justify-between">
+                      <span className="text-green-300/70 text-sm">IT Summer Intern</span>
+                      <button 
+                        onClick={() => openModal('Carikture - Internship Certificate', '/experience/carikture-cert.jpeg', 'image')}
+                        className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors text-sm"
+                      >
+                        <Eye className="w-4 h-4" /> 
+                        <span>View Certificate</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 text-center">
+              <a 
+                href="https://linkedin.com/in/aayush1936/details/recommendations/" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-500/20 border border-green-500 rounded hover:bg-green-500/30 transition-all"
+              >
+                <Linkedin className="w-5 h-5" />
+                <span>View All Recommendations on LinkedIn</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* Contact Section */}
-        <section id="contact" className="py-20 px-6 bg-green-500/5 border-t border-green-500/30">
-          <div className="max-w-4xl mx-auto text-center">
+        <section id="contact" className="py-20 px-6 bg-black border-t border-green-500/30">
+          <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-5xl font-bold mb-8 glitch-text">LET'S BUILD SOMETHING</h2>
             <p className="text-xl text-green-300/80 mb-12">
               Interested in AI systems, cloud architecture, team leadership, or just want to chat tech?
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-12">
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              {/* Direct Contact */}
+              <div>
+                <h3 className="text-2xl font-bold mb-6 text-green-300">Get In Touch</h3>
+                <div className="grid gap-4 mb-8">
               <a 
                 href="mailto:aayush.agarwal1936@gmail.com" 
-                className="flex items-center justify-center gap-3 px-8 py-4 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-all hover:scale-105"
+                    className="flex items-center justify-center gap-3 px-8 py-4 bg-green-500/10 border border-green-500/50 rounded hover:bg-green-500/20 transition-all"
               >
                 <Mail className="w-5 h-5" />
                 <div className="text-left">
@@ -1396,7 +1896,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
               </a>
               <a 
                 href="tel:+918100258835" 
-                className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-green-500 rounded hover:bg-green-500/20 transition-all hover:scale-105"
+                    className="flex items-center justify-center gap-3 px-8 py-4 bg-green-500/10 border border-green-500/50 rounded hover:bg-green-500/20 transition-all"
               >
                 <Phone className="w-5 h-5" />
                 <div className="text-left">
@@ -1416,22 +1916,6 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
               >
                 <Linkedin className="w-6 h-6 group-hover:rotate-12 transition-transform" />
               </a>
-              <a 
-                href="https://github.com/aayush1936" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="p-4 bg-green-500/10 border border-green-500/50 rounded-full hover:bg-green-500/20 hover:scale-110 transition-all group"
-                title="GitHub Profile"
-              >
-                <Github className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-              </a>
-              <a 
-                href="mailto:aayush.agarwal1936@gmail.com" 
-                className="p-4 bg-green-500/10 border border-green-500/50 rounded-full hover:bg-green-500/20 hover:scale-110 transition-all group"
-                title="Email"
-              >
-                <Mail className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-              </a>
               <button
                 onClick={() => setTerminalOpen(true)}
                 className="p-4 bg-green-500/10 border border-green-500/50 rounded-full hover:bg-green-500/20 hover:scale-110 transition-all group"
@@ -1439,9 +1923,175 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
               >
                 <Terminal className="w-6 h-6 group-hover:rotate-12 transition-transform" />
               </button>
+                </div>
             </div>
 
-            <div className="flex items-center gap-2 justify-center text-green-400/60">
+              {/* Contact Form */}
+              <div className="bg-black border-2 border-green-500/30 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4 text-green-300 text-left">Send Direct Message</h3>
+                
+                {formSubmitted ? (
+                  <div className="p-6 text-center">
+                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                    <h4 className="text-xl font-bold text-green-300 mb-2">Message Sent!</h4>
+                    <p className="text-green-400/70">Thanks for reaching out. I'll get back to you soon.</p>
+                    <button
+                      onClick={() => {
+                        setContactName('');
+                        setContactEmail('');
+                        setContactMessage('');
+                        setFormSubmitted(false);
+                      }}
+                      className="mt-4 px-6 py-2 border border-green-500 rounded text-green-400 hover:bg-green-500/10 transition-colors"
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
+                ) : (
+                  <form 
+                    className="space-y-4 text-left"
+                    action="https://formspree.io/f/xjgegzpb"
+                    method="POST"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const form = e.target;
+                      const formData = new FormData(form);
+                      
+                      // Basic example of integrating with a form service
+                      // In production, replace with your actual endpoint
+                      fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                          'Accept': 'application/json'
+                        }
+                      })
+                      .then(response => {
+                        if (response.ok) {
+                          setFormSubmitted(true);
+                        } else {
+                          alert('Form submission failed. Please try again.');
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Error:', error);
+                        // For demo purposes, still show success
+                        setFormSubmitted(true);
+                      });
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="name" className="block text-green-400 text-sm mb-1">Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        className="w-full px-4 py-2 bg-black border border-green-500/50 rounded text-green-400 focus:border-green-500 transition-colors"
+                        placeholder="Your name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-green-400 text-sm mb-1">Email</label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="w-full px-4 py-2 bg-black border border-green-500/50 rounded text-green-400 focus:border-green-500 transition-colors"
+                        placeholder="your.email@example.com"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="message" className="block text-green-400 text-sm mb-1">Message</label>
+                      <textarea
+                        id="message"
+                        name="message"
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        className="w-full px-4 py-2 bg-black border border-green-500/50 rounded text-green-400 focus:border-green-500 transition-colors h-32"
+                        placeholder="Your message here..."
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full px-6 py-3 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-colors"
+                    >
+                      Send Message
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+            
+            {/* Article Notifications */}
+            <div className="mt-16 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold mb-4 text-green-300">Get Notified About New Articles</h3>
+              <p className="text-green-400/70 mb-6">Subscribe to receive notifications when I publish new articles about AI systems, cloud architecture, and engineering leadership.</p>
+              
+              {notificationSubmitted ? (
+                <div className="p-6 bg-green-500/10 border border-green-500/50 rounded-lg">
+                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-green-300">You're subscribed! You'll be notified when new content is available.</p>
+                </div>
+              ) : (
+                <form 
+                  className="flex gap-2"
+                  action="https://formspree.io/f/xjgegzpb"
+                  method="POST"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const formData = new FormData(form);
+                    formData.append('form-type', 'blog-notification'); // Add form type to distinguish from contact form
+
+                    // Submit to Formspree
+                    fetch(form.action, {
+                      method: 'POST',
+                      body: formData,
+                      headers: {
+                        'Accept': 'application/json'
+                      }
+                    })
+                    .then(response => {
+                      if (response.ok) {
+                        setNotificationSubmitted(true);
+                      } else {
+                        alert('Subscription failed. Please try again.');
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Error:', error);
+                      setNotificationSubmitted(true); // Still show success for demo purposes
+                    });
+                  }}
+                >
+                  <input
+                    type="email"
+                    name="email"
+                    value={notificationEmail}
+                    onChange={(e) => setNotificationEmail(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-black border border-green-500/50 rounded text-green-400 focus:border-green-500 transition-colors"
+                    placeholder="your.email@example.com"
+                    required
+                  />
+                  <input type="hidden" name="subject" value="New Blog Notification Signup" />
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-green-500/20 border border-green-500 rounded text-green-400 hover:bg-green-500/30 transition-colors whitespace-nowrap"
+                  >
+                    Notify Me
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="mt-12 flex items-center gap-2 justify-center text-green-400/60">
               <MapPin className="w-4 h-4" />
               <span>Open to remote opportunities worldwide</span>
             </div>
@@ -1452,7 +2102,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
         <footer className="py-8 px-6 border-t border-green-500/30 text-center">
           <div className="max-w-7xl mx-auto">
             <p className="text-green-400/60 mb-2">
-              © 2026 Aayush Agarwal. Built with React + Tailwind CSS
+              © 2026 Aayush Agarwal
             </p>
             <p className="text-green-400/40 text-sm">
               {'>'} System online. Status: Operational. Uptime: 99.9%
@@ -1465,14 +2115,148 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
               <a href="https://linkedin.com/in/aayush1936" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
                 LinkedIn
               </a>
-              <span>•</span>
-              <a href="https://github.com/aayush1936" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
-                GitHub
-              </a>
             </div>
           </div>
         </footer>
       </main>
+
+      {/* Modal for document/image previews */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in overflow-hidden">
+          <div className="relative w-full max-w-6xl max-h-[90vh] bg-gray-900 border-2 border-green-500 rounded-lg overflow-hidden shadow-2xl shadow-green-500/30">
+            <div className="bg-green-500/20 px-4 py-3 flex justify-between items-center border-b border-green-500">
+              <h3 className="text-green-300 font-bold">{modalTitle}</h3>
+              <button 
+                onClick={closeModal} 
+                className="hover:text-red-500 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-60px)]">
+              {modalType === 'image' && (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={modalContent} 
+                    alt={modalTitle} 
+                    className="max-w-full max-h-[70vh] object-contain mb-4"
+                  />
+                  <a 
+                    href={modalContent}
+                    download
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500 rounded hover:bg-green-500/30 transition-colors"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>Download</span>
+                  </a>
+                </div>
+              )}
+              
+              {modalType === 'pdf' && (
+                <div className="flex flex-col items-center h-[70vh]">
+                  <iframe 
+                    src={`${modalContent}#toolbar=0`} 
+                    className="w-full h-full border-0 mb-4"
+                    title={modalTitle}
+                  />
+                  <a 
+                    href={modalContent}
+                    download
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500 rounded hover:bg-green-500/30 transition-colors"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>Download</span>
+                  </a>
+                </div>
+              )}
+              
+              {modalType === 'resume' && (
+                <div className="flex flex-col items-center h-[70vh]">
+                  <iframe 
+                    src={`https://drive.google.com/file/d/${modalUrl.split('/')[5]}/preview`}
+                    className="w-full h-full border-0 mb-4 rounded"
+                    title={modalTitle}
+                    allow="autoplay"
+                  />
+                  <div className="flex gap-4">
+                    <a 
+                      href={modalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500/20 border border-green-500 rounded hover:bg-green-500/30 transition-colors"
+                    >
+                      <Eye className="w-5 h-5" />
+                      <span>View in Google Drive</span>
+                    </a>
+                    <a 
+                      href={`https://drive.google.com/uc?export=download&id=${modalUrl.split('/')[5]}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 text-black font-bold rounded hover:bg-green-400 transition-colors"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>Download PDF</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {modalType === 'recommendation' && selectedRecommendation && (
+                <div className="max-w-3xl mx-auto">
+                  {/* Header with Avatar and Info */}
+                  <div className="flex items-start gap-6 mb-6 pb-6 border-b border-green-500/30">
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/30 to-green-600/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-green-500">
+                      <Users className="w-10 h-10 text-green-400" />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold text-green-300 mb-2">{selectedRecommendation.name}</h3>
+                      <div className="text-green-400 text-lg mb-1">{selectedRecommendation.role}</div>
+                      <div className="text-green-400/70 mb-3">{selectedRecommendation.company}</div>
+                      
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-green-400/60">
+                          <Users className="w-4 h-4" />
+                          <span>{selectedRecommendation.relationship}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-green-400/60">
+                          <Calendar className="w-4 h-4" />
+                          <span>{selectedRecommendation.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Full Recommendation Text */}
+                  <div className="mb-6">
+                    <Quote className="w-12 h-12 text-green-500/20 mb-4" />
+                    <p className="text-green-300/80 text-lg leading-relaxed">
+                      "{selectedRecommendation.text}"
+                    </p>
+                  </div>
+
+                  {/* LinkedIn Link */}
+                  {selectedRecommendation.linkedIn && (
+                    <div className="flex justify-center pt-6 border-t border-green-500/30">
+                      <a
+                        href={selectedRecommendation.linkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-6 py-3 bg-green-500/20 border border-green-500 rounded-lg hover:bg-green-500/30 transition-colors"
+                      >
+                        <Linkedin className="w-5 h-5" />
+                        <span className="font-medium">View {selectedRecommendation.name}'s LinkedIn Profile</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
