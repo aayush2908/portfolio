@@ -2109,7 +2109,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                   <span className="text-green-400/60 text-xs mb-1">Portfolio Views</span>
                   <div className="flex items-center gap-2">
                     <img 
-                      src="https://komarev.com/ghpvc/?username=aayush2908&label=Visitors&color=00ff95&style=flat-square" 
+                      src="https://visitor-badge.laobi.icu/badge?page_id=aayush2908.portfolio&left_color=black&right_color=00ff95&left_text=Visitors" 
                       alt="Visitor Count"
                       className="h-5"
                     />
