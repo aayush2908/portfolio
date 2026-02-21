@@ -8,7 +8,7 @@ export const profile = {
   phone: '+91-8100258835',
   linkedin: 'https://www.linkedin.com/in/aayush1936',
   github: 'https://github.com/aayush1936',
-  resumeUrl: 'https://drive.google.com/file/d/1DD1X5J4yPINJMrTgoRVULV5_0llMis8K/view?usp=sharing',
+  resumeUrl: 'https://drive.google.com/file/d/1YryrFHB-Zl7BGoraWUvIhkWJNKG7Psg2/view?usp=sharing',
   
   highlights: [
     'Architecting scalable AI systems',

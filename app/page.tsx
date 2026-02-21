@@ -352,7 +352,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
           'Aayush Agarwal - Resume', 
           null, 
           'resume',
-          'https://drive.google.com/file/d/1DD1X5J4yPINJMrTgoRVULV5_0llMis8K/view?usp=sharing'
+          'https://drive.google.com/file/d/1YryrFHB-Zl7BGoraWUvIhkWJNKG7Psg2/view?usp=sharing'
         );
       }
     }),
@@ -763,7 +763,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                     'Aayush Agarwal - Resume', 
                     null, 
                     'resume',
-                    'https://drive.google.com/file/d/1DD1X5J4yPINJMrTgoRVULV5_0llMis8K/view?usp=sharing'
+                    'https://drive.google.com/file/d/1YryrFHB-Zl7BGoraWUvIhkWJNKG7Psg2/view?usp=sharing'
                   );
                 }}
                 className="flex items-center gap-2 px-6 py-3 border-2 border-green-500 rounded hover:bg-green-500/20 transition-all hover:scale-105"
