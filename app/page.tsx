@@ -591,7 +591,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
             <span className="text-xl font-bold">aayush.dev</span>
           </div>
           <div className="hidden md:flex gap-6">
-            {['home', 'experience', 'projects', 'skills', 'blog', 'recommendations', 'contact'].map(section => (
+            {['home', 'experience', 'projects', 'skills', 'recommendations', 'contact'].map(section => (
               <button
                 key={section}
                 onClick={() => {
@@ -1475,7 +1475,8 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
           </div>
         </section>
 
-        {/* Blog Section (Coming Soon) */}
+        {/* Blog Section - Commented out for now, uncomment when ready */}
+        {/*
         <section id="blog" className="py-20 px-6 bg-green-500/5 border-y border-green-500/30">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center gap-4 mb-12">
@@ -1554,9 +1555,8 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       e.preventDefault();
                       const form = e.target;
                       const formData = new FormData(form);
-                      formData.append('form-type', 'blog-notification'); // Add form type to distinguish from contact form
+                      formData.append('form-type', 'blog-notification');
 
-                      // Submit to Formspree
                       fetch(form.action, {
                         method: 'POST',
                         body: formData,
@@ -1573,7 +1573,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
                       })
                       .catch(error => {
                         console.error('Error:', error);
-                        setNotificationSubmitted(true); // Still show success for demo purposes
+                        setNotificationSubmitted(true);
                       });
                     }}
                   >
@@ -1599,6 +1599,7 @@ Type 'linkedin' or 'github' to open profiles in new tab.`
             </div>
           </div>
         </section>
+        */}
 
         {/* Achievements */}
         <section className="py-20 px-6">
